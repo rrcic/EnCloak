@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+
+// 用到hotcall的 initvalue,deletevalue,commitInt,commitBranch; commitFloat开始似乎就没有走hotcall框架了
 public class sgx_invoker{
   	public static final int N=20;
   	// public static final int Temp=100;
@@ -14,7 +16,7 @@ public class sgx_invoker{
 	public static native int init();
 	public static native int destroy();
 	// get
-	public static native int commitInt(long counter, int[] intArray, int intTail, double[] doubleArray, int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray,int charTail, byte[] byteArray,int byteTail, String uuid);
+	public static native int commitInt(long counter, int[] intArray, int intTail, double[] doubleArray, int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray,int charTail, byte[] byteArray,int byteTail, String uuid, String ouuid, String cuuid);
 	public static native float commitFloat(long counter, int[] intArray, int intTail, double[] doubleArray, int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray,int charTail, byte[] byteArray,int byteTail, String uuid);
 	public static native double commitDouble(long counter, int[] intArray, int intTail, double[] doubleArray, int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray,int charTail, byte[] byteArray,int byteTail, String uuid);
 	public static native char commitChar(long counter, int[] intArray, int intTail, double[] doubleArray, int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray,int charTail, byte[] byteArray,int byteTail, String uuid);
@@ -24,12 +26,12 @@ public class sgx_invoker{
 	public static native double[] commitDoubleArray(long counter,String uuid);
 	public static native byte[] commitByteArray(long counter,String uuid);
 	// branch
-	public static native int commitBranch(long counter, int[] intArray, int intTail, double[] doubleArray, int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray,int charTail, byte[] byteArray,int byteTail, String uuid);
+	public static native int commitBranch(long counter, int[] intArray, int intTail, double[] doubleArray, int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray,int charTail, byte[] byteArray,int byteTail, String uuid, String ouuid, String cuuid);
 	// update
 	public static native int commitUpdate(long counter, int[] intArray,int intTail, double[] doubleArray,int doubleTail,float[] floatArray, int floatTail, long[] longArray, int longTail, char[] charArray, int charTail,byte[] byteArray,int byteTail, String uuid, String ouuid, String cuuid);
 	
-	public static native int initValue(String uuid,String calluuid,long LineNo);
-	public static native int deleteValue(String uuid,String cuuid,long status);
+	public static native int initValue(String uuid,String calluuid,long LineNo, String ouuid, String cuuid);
+	public static native int deleteValue(String uuid,String ouuid,String cuuid,long status);
 	public static native void initNode(String uuid,int type,int size);
     
     // 原方案
@@ -222,9 +224,6 @@ public class sgx_invoker{
 		this.cuuid = null;
 	}
 	
-//	public void setInvokeCounter(long counter){
-//		this.invokecounter = counter;
-//	}
 	
 	public boolean initenclave(){
 		System.out.println("----enter initenclave()----");
@@ -261,7 +260,7 @@ public class sgx_invoker{
 	
 	public boolean initValueInEnclave(String uuid, String calluuid, long LineNO){
 		//System.out.println("uuid="+uuid);
-		if(1==initValue(uuid, calluuid, LineNO)){
+		if(1==initValue(uuid, calluuid, LineNO, ouuid, cuuid)){
 			System.out.println("----initValue true----");
 			return true;
 		}
@@ -272,7 +271,7 @@ public class sgx_invoker{
 		}
 	}
 	
-	// [hyr] TODO cuuid?
+	// [hyr]0814 TODO cuuid? 这里cuuid是从java接收的，还需要再进一步处理
 	public boolean deleteValueInEnclave(String getuuid, String cuuid, long status){
 		System.out.println("status: " + status);
 		if(1==deleteValue(getuuid, cuuid, status)){
@@ -299,7 +298,7 @@ public class sgx_invoker{
 			int[] newi = new int[size_i];
 			double [] newd = new double[size_d];
 			float [] newf = new float[size_f];
-			//char [] newc = new char[size_c];
+			char [] newc = new char[size_c];
 			long [] newl = new long[size_l];
 			byte [] newb = new byte[size_b];
 			
@@ -312,17 +311,18 @@ public class sgx_invoker{
 			for (int i = 0; i < size_f; i++) {
 				newf[i] = farr[i];
 			}
-//			for (int i = 0; i < size_c; i++) {
-//				newc[i] = carr[i];
-//			}
+			for (int i = 0; i < size_c; i++) {
+				newc[i] = carr[i];
+			}
 			for (int i = 0; i < size_l; i++) {
 				newl[i] = larr[i];
 			}
 			for (int i = 0; i < size_b; i++) {
 				newb[i] = barr[i];
 			}
+			// [hyr]cuuid不放在char数组中，但注意initVaule中在用到hotcall_request函数时，calluuid是放在char数组中的
 			ret = commitUpdate(counter,newi,size_i,newd,size_d,newf,size_f,
-					newl,size_l,(cuuid==null)?charArray:cuuid.toCharArray(),(cuuid==null)?charTail:cuuid.toCharArray().length,newb,size_b,uuid,ouuid,cuuid);
+					newl,size_l,newc,size_c,newb,size_b,uuid,ouuid,cuuid);
 			System.out.println("status: " + status);
 		}
 		
@@ -341,7 +341,7 @@ public class sgx_invoker{
 	
 	public boolean getBooleanValue(String uuid, long counter){ 
 		int ret = -1;
-		ret = commitBranch(counter, intArray, intTail, doubleArray, doubleTail, floatArray, floatTail, longArray, longTail, charArray, charTail, byteArray, byteTail, uuid);
+		ret = commitBranch(counter, intArray, intTail, doubleArray, doubleTail, floatArray, floatTail, longArray, longTail, charArray, charTail, byteArray, byteTail, uuid, ouuid, cuuid);
 		if(ret == 1){
 			System.out.println("----commitBranch true----");
 			clear();
@@ -364,7 +364,7 @@ public class sgx_invoker{
 	public int getIntValue(String uuid, int status, long counter){ 
 		System.out.println("----enter getIntValue()----");
 		int ret = -1;
-		ret = commitInt(counter, intArray, intTail, doubleArray, doubleTail, floatArray, floatTail, longArray, longTail, charArray, charTail, byteArray, byteTail, uuid);
+		ret = commitInt(counter, intArray, intTail, doubleArray, doubleTail, floatArray, floatTail, longArray, longTail, charArray, charTail, byteArray, byteTail, uuid, ouuid, cuuid);
 		System.out.println("ret: " + ret);
 		clear();
 		return ret;

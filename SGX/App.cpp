@@ -299,7 +299,7 @@ JNIEXPORT void JNICALL Java_invoker_sgx_1invoker_initNode
 
 
 JNIEXPORT jint JNICALL Java_invoker_sgx_1invoker_commitInt
-  (JNIEnv *env, jclass obj, jlong counter, jintArray jintArray, jint intTail, jdoubleArray jdoubleArray, jint doubleTail, jfloatArray jfloatArray, jint floatTail,jlongArray jlongArray, jint longTail, jcharArray jcharArray, jint charTail,jbyteArray jbyteArray, jint byteTail, jstring uuidstring){
+  (JNIEnv *env, jclass obj, jlong counter, jintArray jintArray, jint intTail, jdoubleArray jdoubleArray, jint doubleTail, jfloatArray jfloatArray, jint floatTail,jlongArray jlongArray, jint longTail, jcharArray jcharArray, jint charTail,jbyteArray jbyteArray, jint byteTail, jstring uuidstring, jstring ouuidstring, jstring cuuidstring){
 
 
 	
@@ -365,24 +365,27 @@ gnum++;
 	//}
 
 	int re=-99;
-	const char* buf = env->GetStringUTFChars(uuidstring, false);
-	char uuid[33] = {0};
-	char cuuid[33] = {0};
-	strcpy(uuid,buf);
-	env->ReleaseStringUTFChars(uuidstring,buf);
 
-//printf("get Line=%ld ,uuid=%s\n",counter,uuid);
+	// [hyr]obatain uuid, ouuid, cuuid, 0813
+	const char* uuidBuf = env->GetStringUTFChars(uuidstring, false);
+	char uuid[33] = {0};
+	strncpy(uuid,uuidBuf,32);
+	env->ReleaseStringUTFChars(uuidstring,uuidBuf);
+
+	const char* ouuidBuf = env->GetStringUTFChars(ouuidstring, false);
+	char ouuid[33] = {0};
+	strncpy(uuid,ouuidBuf,32);
+	env->ReleaseStringUTFChars(ouuidstring,ouuidBuf);
+
+
+	const char* cuuidBuf = env->GetStringUTFChars(cuuidstring, false);
+	char cuuid[33] = {0};
+	strncpy(cuuid,cuuidBuf,32);
+	env->ReleaseStringUTFChars(cuuidstring,cuuidBuf);
+  
 	//sgx_status_t ret=encall_switch_type_i(global_eid,&re,counter,intArray,intTail,doubleArray,doubleTail,floatArray,floatTail,charArray,charTail,longArray,longTail,byteArray,byteTail,uuid);
-	HotCall_requestCall( &hotEcall,requestedCallID4, &counter,intArray,intTail,doubleArray,doubleTail,floatArray,floatTail,charArray,charTail,longArray,longTail,byteArray,byteTail,uuid,cuuid,&re_get);
-	//printf("after HotCall_requestCall get over\n");
-//printf("get Line=%ld ,uuid=%s\n",counter,uuid);
-	
-//	if(env -> ExceptionOccurred()){
-//		printf(" commInt ExceptionOccurred\n");
-//		if(env -> MonitorExit(obj)!= JNI_OK);
-//		return 0;
-//	}
-	//getint_ecall++;
+	HotCall_requestCall( &hotEcall,requestedCallID4, &counter,intArray,intTail,doubleArray,doubleTail,floatArray,floatTail,charArray,charTail,longArray,longTail,byteArray,byteTail,uuid,ouuid,cuuid,&re_get);
+
 	re = re_get;
 
 //if(counter == 48L){
@@ -727,7 +730,7 @@ JNIEXPORT jlong JNICALL Java_invoker_sgx_1invoker_commitLong
 }
 
 JNIEXPORT jint JNICALL Java_invoker_sgx_1invoker_commitBranch
- (JNIEnv *env, jclass obj, jlong counter, jintArray jintArray, jint intTail, jdoubleArray jdoubleArray, jint doubleTail, jfloatArray jfloatArray, jint floatTail,jlongArray jlongArray, jint longTail, jcharArray jcharArray, jint charTail,jbyteArray jbyteArray, jint byteTail, jstring uuidstring){
+ (JNIEnv *env, jclass obj, jlong counter, jintArray jintArray, jint intTail, jdoubleArray jdoubleArray, jint doubleTail, jfloatArray jfloatArray, jint floatTail,jlongArray jlongArray, jint longTail, jcharArray jcharArray, jint charTail,jbyteArray jbyteArray, jint byteTail, jstring uuidstring, jstring ouuidstring, jstring cuuidstring){
 	
 	if(env -> MonitorEnter(obj)!= JNI_OK)
 		printf("branch enter wrong \n");
@@ -792,14 +795,26 @@ bnum++;
 	}*/
 
 	int re = -98;
-	const char* buf = env->GetStringUTFChars(uuidstring, false);
+
+	// [hyr]obtain uuid, ouuid, cuuid, 0813
+	const char* uuidBuf = env->GetStringUTFChars(uuidstring, false);
 	char uuid[33] = {0};
-	strncpy(uuid,buf,32);
-	env->ReleaseStringUTFChars(uuidstring, buf);
-//printf("branch Line=%ld ,uuid=%s\n",counter,uuid);
-	//printf("go to branch\n");
+	strncpy(uuid,uuidBuf,32);
+	env->ReleaseStringUTFChars(uuidstring,uuidBuf);
+
+	const char* ouuidBuf = env->GetStringUTFChars(ouuidstring, false);
+	char ouuid[33] = {0};
+	strncpy(uuid,ouuidBuf,32);
+	env->ReleaseStringUTFChars(ouuidstring,ouuidBuf);
+
+
+	const char* cuuidBuf = env->GetStringUTFChars(cuuidstring, false);
+	char cuuid[33] = {0};
+	strncpy(cuuid,cuuidBuf,32);
+	env->ReleaseStringUTFChars(cuuidstring,cuuidBuf);
+  
 	//sgx_status_t ret=encall_switch_type_i(global_eid,&re,counter,intArray,intTail,doubleArray,doubleTail,floatArray,floatTail,charArray,charTail,longArray,longTail,byteArray,byteTail,uuid);
-	HotCall_requestCall( &hotEcall,requestedCallID, &counter,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,uuid,NULL,&reb);	
+	HotCall_requestCall( &hotEcall,requestedCallID, &counter,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,uuid,ouuid,cuuid,&reb);	
 	//HotCall_requestCall( &hotEcall,requestedCallID, &counter,intArray,intTail,doubleArray,doubleTail,floatArray,floatTail,charArray,charTail,longArray,longTail,byteArray,byteTail,uuid,NULL,&reb);
 	//printf("branch over\n");
 	
@@ -920,6 +935,7 @@ unum++;
 
 	int re=-97;
 
+	// obtain uuid, ouuid, cuuid
 	const char* uuidBuf = env->GetStringUTFChars(uuidstring, false);
 	char uuid[33] = {0};
 	strncpy(uuid,uuidBuf,32);
@@ -930,21 +946,14 @@ unum++;
 	strncpy(uuid,ouuidBuf,32);
 	env->ReleaseStringUTFChars(ouuidstring,ouuidBuf);
 
-
 	const char* cuuidBuf = env->GetStringUTFChars(cuuidstring, false);
 	char cuuid[33] = {0};
 	strncpy(cuuid,cuuidBuf,32);
 	env->ReleaseStringUTFChars(cuuidstring,cuuidBuf);
-
-
-	// char cuuid[33] = {0};
-	// strncpy(cuuid,buf+32,32);
-//printf("uuid=%s cuuid=%s\n",uuid,cuuid);
-
   
 	//sgx_status_t ret=encall_switch_type_i(global_eid,&reu,counter,intArray,intTail,doubleArray,doubleTail,floatArray,floatTail,charArray,charTail,longArray,longTail,byteArray,byteTail,uuid);
 	HotCall_requestCall( &hotEcall,requestedCallID3,&counter,intArray,intTail,doubleArray,doubleTail,floatArray,floatTail,charArray,charTail,longArray,longTail,byteArray,byteTail,uuid,ouuid,cuuid,&reu);
-//printf("update over\n");
+	//printf("update over\n");
 	
 	if(intTail > 0){
 		delete[] intArray;
@@ -965,22 +974,6 @@ unum++;
 	if(byteTail > 0){
 		delete[] byteArray;
 	}
-
-	//int rei=-977;
-	//if(reu == 1000){
-	//	rei = 1;
-	//}else{
-	//	printf("update error!!! in app.cpp rei=%d\n",rei);
-	//	rei = 0;
-	//}
-
-	
-//	if(env -> ExceptionOccurred()){
-//		printf(" update ExceptionOccurred\n");
-//		if(env -> MonitorExit(obj)!= JNI_OK);
-//		return 0;
-//	}
-	//update_ecall++;
 	
 	re = reu;
 //printf("out update\n");	
@@ -992,7 +985,7 @@ unum++;
 }
 
 JNIEXPORT jint JNICALL Java_invoker_sgx_1invoker_initValue
-  (JNIEnv *env, jclass obj,jstring uuidstring,jstring calluuidstring, jlong lineno){
+  (JNIEnv *env, jclass obj,jstring uuidstring,jstring calluuidstring, jlong lineno,jstring ouuidstring, jstring cuuidstring){
 	//hashmap insert
 
 	if(env -> MonitorEnter(obj)!= JNI_OK)
@@ -1002,64 +995,77 @@ JNIEXPORT jint JNICALL Java_invoker_sgx_1invoker_initValue
 inum++;
 //printf("initnum=%ld\n",num);
 //printf("11112\n");
-	const char* buf = env->GetStringUTFChars(uuidstring, false);
-	strcpy(uuid3,buf);
-	env->ReleaseStringUTFChars(uuidstring, buf);
-//printf("11113\n");
+	// const char* buf = env->GetStringUTFChars(uuidstring, false);
+	// strcpy(uuid3,buf);
+	// env->ReleaseStringUTFChars(uuidstring, buf);
+
+	// obtain uuid, ouuid, cuuid, 0813
+	const char* uuidBuf = env->GetStringUTFChars(uuidstring, false);
+	char uuid[33] = {0};
+	strncpy(uuid,uuidBuf,32);
+	env->ReleaseStringUTFChars(uuidstring,uuidBuf);
+
+	const char* ouuidBuf = env->GetStringUTFChars(ouuidstring, false);
+	char ouuid[33] = {0};
+	strncpy(uuid,ouuidBuf,32);
+	env->ReleaseStringUTFChars(ouuidstring,ouuidBuf);
+
+	const char* cuuidBuf = env->GetStringUTFChars(cuuidstring, false);
+	char cuuid[33] = {0};
+	strncpy(cuuid,cuuidBuf,32);
+	env->ReleaseStringUTFChars(cuuidstring,cuuidBuf);
+
+	// do not use global variable uuid3, uuid3c	
 	if(calluuidstring == NULL){
-		//printf("11116\n");
-		//encall_varible(global_eid,uuid3,NULL,lineno);
-		HotCall_requestCall( &hotEcall3,requestedCallID1,&lineno,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,uuid3,NULL,&tem);
+		HotCall_requestCall( &hotEcall3,requestedCallID1,&lineno,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,uuid,ouuid,cuuid,&tem);
 	}else{
 		const char* callbuf = env->GetStringUTFChars(calluuidstring, false);
-//printf("11114\n");
-	//char uuid[33] = {0};
-	
-		strcpy(uuid3c,callbuf);
+		char calluuid[33] = {0};	
+		strcpy(calluuid,callbuf);
 		env->ReleaseStringUTFChars(calluuidstring, callbuf);
-	//int intArray[ArrayLen];
-	//jint *body_i = env->GetIntArrayElements(jintArray, 0);
-	//memcpy(intArray,body_i,8);
-	//int reinitvalue;
-//printf("2222\n");
-		//encall_varible(global_eid,uuid3,uuid3c,lineno);
-		HotCall_requestCall( &hotEcall3,requestedCallID1,&lineno,NULL,0,NULL,0,NULL,0,uuid3c,32,NULL,0,NULL,0,uuid3,NULL,&tem);
+		HotCall_requestCall( &hotEcall3,requestedCallID1,&lineno,NULL,0,NULL,0,NULL,0,calluuid,32,NULL,0,NULL,0,uuid,ouuid,cuuid,&tem);
 
 	//env->ReleaseIntArrayElements(jintArray, body_i, 0); 
 	}
-//printf("init over\n");	
 	if(env -> MonitorExit(obj)!= JNI_OK)
 		printf("initvalue exit wrong \n");
 	return 1;
 }
 
 JNIEXPORT jint JNICALL Java_invoker_sgx_1invoker_deleteValue
-  (JNIEnv *env, jclass obj, jstring uuidstring,jstring deletecuuid,jlong status){
+  (JNIEnv *env, jclass obj, jstring uuidstring, jstring ouuidstring, jstring cuuidstring, jlong status){
 
-
+  	// TODO status和原本的uuid3c之间的关系
 	if(env -> MonitorEnter(obj)!= JNI_OK)
 		printf("deletevalue enter wrong \n");
-//printf("go to delete\n");
-dnum++;
-	const char* buf = env->GetStringUTFChars(uuidstring, false);
-	//char uuid[33] = {0};
-	strcpy(uuid3,buf);
-	//deletevalue_ecall++;
-	//printf("[delete]status=%ld\n",status);
+	dnum++;
+
+	// obtain uuid, ouuid, cuuid, 0813
+	const char* uuidBuf = env->GetStringUTFChars(uuidstring, false);
+	char uuid[33] = {0};
+	strncpy(uuid,uuidBuf,32);
+	env->ReleaseStringUTFChars(uuidstring,uuidBuf);
+
+	const char* ouuidBuf = env->GetStringUTFChars(ouuidstring, false);
+	char ouuid[33] = {0};
+	strncpy(uuid,ouuidBuf,32);
+	env->ReleaseStringUTFChars(ouuidstring,ouuidBuf);
+
+	const char* cuuidBuf = env->GetStringUTFChars(cuuidstring, false);
+	char cuuid[33] = {0};
+	strncpy(cuuid,cuuidBuf,32);
+	env->ReleaseStringUTFChars(cuuidstring,cuuidBuf);
+	
 	if(status == 0){
 	//encall_deleteValue(global_eid,uuid);
-		HotCall_requestCall( &hotEcall3,requestedCallID2, &status,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,uuid3,NULL,&tem);
+		HotCall_requestCall( &hotEcall3,requestedCallID2, &status,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,NULL,0,uuid,ouuid,cuuid,&tem);
 	}else if(status == 1){
-		//printf("[delete]status=%ld",status);
-		const char* callbuf = env->GetStringUTFChars(deletecuuid, false);
-		strcpy(uuid3c,callbuf);
-		env->ReleaseStringUTFChars(deletecuuid, callbuf);
-		HotCall_requestCall( &hotEcall3,requestedCallID2, &status,NULL,0,NULL,0,NULL,0,uuid3c,32,NULL,0,NULL,0,uuid3,NULL,&tem);
+		const char* callbuf = env->GetStringUTFChars(calluuidstring, false);
+		char calluuid[33] = {0};	
+		strcpy(calluuid,callbuf);
+		env->ReleaseStringUTFChars(calluuidstring, callbuf);
+		HotCall_requestCall( &hotEcall3,requestedCallID2, &status,NULL,0,NULL,0,NULL,0,calluuid,32,NULL,0,NULL,0,uuid,ouuid,cuuid,NULL,&tem);
 	}
-//printf("delete over\n");
-	env->ReleaseStringUTFChars(uuidstring, buf);
-
-//---------------------------------------------------------------------	
 	if(env -> MonitorExit(obj)!= JNI_OK)
 		printf("deletevalue exit wrong \n");
 	return 1;
